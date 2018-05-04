@@ -1,0 +1,43 @@
+* libelcouch
+
+  #+BEGIN_HTML
+      <p>
+        <a href="https://stable.melpa.org/#/libelcouch">
+          <img alt="MELPA Stable" src="https://stable.melpa.org/packages/libelcouch-badge.svg"/>
+        </a>
+
+        <a href="https://melpa.org/#/libelcouch">
+          <img alt="MELPA" src="https://melpa.org/packages/libelcouch-badge.svg"/>
+        </a>
+
+        <a href="https://gitlab.petton.fr/elcouch/libelcouch/commits/master">
+          <img alt="pipeline status" src="https://gitlab.petton.fr/elcouch/libelcouch/badges/master/pipeline.svg" />
+        </a>
+      </p>
+  #+END_HTML
+
+** Summary
+
+The package libelcouch is an Emacs library client to communicate with
+[[https://couchdb.apache.org/][CouchDB]], a database focusing on ease of use and having a scalable
+architecture. For a user interface, please check the [[https://gitlab.petton.fr/elcouch/elcouch][elcouch]] project
+instead (which depends on this one).
+
+** Installing
+
+Get libelcouch from [[https://melpa.org/#/libmpdel][melpa]] or [[https://stable.melpa.org/#/libmpdel][melpa stable]]. You can also clone the git
+repository.
+
+You need to have at least one CouchDB instance running.
+
+** License
+
+See [[file:COPYING][COPYING]]. Copyright (c) 2018 Damien Cassou.
+
+  #+BEGIN_HTML
+  <a href="https://liberapay.com/DamienCassou/donate">
+    <img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg">
+  </a>
+  #+END_HTML
+
+#  LocalWords:  MPD minibuffer
