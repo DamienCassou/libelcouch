@@ -45,6 +45,12 @@
   "List of CouchDB instances."
   :type 'list)
 
+(defcustom libelcouch-timeout 10
+  "Timeout in seconds for calls to the CouchDB instance.
+Number of seconds before a call to CouchDB without answer is
+considered to have failed."
+  :type 'number)
+
 
 ;;; Structures
 
@@ -79,6 +85,15 @@
   "Return the name of ENTITY."
   (libelcouch--named-entity-name entity))
 
+(cl-defgeneric libelcouch-entity-full-name ((entity libelcouch-named-entity))
+  "Return the full name of ENTITY's parent followed by ENTITY name."
+  (format "%s/%s"
+          (libelcouch-entity-name (libelcouch-entity-parent entity))
+          (libelcouch-entity-name entity)))
+
+(cl-defmethod libelcouch-entity-full-name ((entity libelcouch-instance))
+  (libelcouch-entity-name entity))
+
 (cl-defgeneric libelcouch-entity-parent (entity)
   "Return the entity containing ENTITY.")
 
@@ -109,6 +124,10 @@
 (cl-defmethod libelcouch-entity-url ((instance libelcouch-instance))
   (libelcouch--instance-url instance))
 
+(defun libelcouch-document-revision (document)
+  "Return the revision of DOCUMENT as a string."
+  (libelcouch--document-revision document))
+
 
 ;;; Private helpers
 
@@ -138,23 +157,48 @@
 (cl-defmethod libelcouch--entity-children-url ((database libelcouch-database))
   (format "%s/%s" (libelcouch-entity-url database) "_all_docs"))
 
+(cl-defun libelcouch--request-error (&rest args &key error-thrown &allow-other-keys)
+  "Report an error when communication with an instance fails."
+  (error "Got error: %S" error-thrown))
+
 
 ;;; Navigating
+
+(defun libelcouch-instances ()
+  "Return a list of couchdb instances built from `libelcouch-couchdb-instances'."
+  (mapcar
+   (lambda (instance-data) (libelcouch--instance-create
+                       :name (car instance-data)
+                       :url (cadr instance-data)))
+   libelcouch-couchdb-instances))
 
 (cl-defgeneric libelcouch-entity-list (entity function)
   "Evaluate function with the children of ENTITY as parameter."
   (request
-   (libelcouch--entity-children-url entity)
+   (url-encode-url (libelcouch--entity-children-url entity))
+   :timeout libelcouch-timeout
    :headers '(("Content-Type" . "application/json")
               ("Accept" . "application/json"))
    :parser 'json-read
    :success (cl-function
              (lambda (&key data &allow-other-keys)
-               (message "json: %S" data)
                (let* ((children (libelcouch--entity-create-children-from-json entity data)))
                  (funcall function children))))
-   :error (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
-                         (message "Got error: %S" error-thrown)))))
+   :error #'libelcouch--request-error)
+  nil)
+
+(defun libelcouch-document-content (document function)
+  "Evaluate FUNCTION with the content of DOCUMENT as parameter."
+  (request
+   (url-encode-url (libelcouch-entity-url document))
+   :timeout libelcouch-timeout
+   :parser (lambda () (decode-coding-string (buffer-substring-no-properties (point) (point-max)) 'utf-8))
+   :headers '(("Accept" . "application/json"))
+   :success (cl-function
+             (lambda (&key data &allow-other-keys)
+               (funcall function data)))
+   :error #'libelcouch--request-error)
+  nil)
 
 (provide 'libelcouch)
 ;;; libelcouch.el ends here
