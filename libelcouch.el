@@ -171,7 +171,7 @@ considered to have failed."
 (cl-defgeneric libelcouch-entity-list (entity function)
   "Evaluate function with the children of ENTITY as parameter."
   (request
-   (libelcouch--entity-children-url entity)
+   (url-encode-url (libelcouch--entity-children-url entity))
    :timeout libelcouch-timeout
    :headers '(("Content-Type" . "application/json")
               ("Accept" . "application/json"))
