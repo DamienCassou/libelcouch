@@ -187,5 +187,18 @@ considered to have failed."
    :error #'libelcouch--request-error)
   nil)
 
+(defun libelcouch-document-content (document function)
+  "Evaluate FUNCTION with the content of DOCUMENT as parameter."
+  (request
+   (url-encode-url (libelcouch-entity-url document))
+   :timeout libelcouch-timeout
+   :parser (lambda () (decode-coding-string (buffer-substring-no-properties (point) (point-max)) 'utf-8))
+   :headers '(("Accept" . "application/json"))
+   :success (cl-function
+             (lambda (&key data &allow-other-keys)
+               (funcall function data)))
+   :error #'libelcouch--request-error)
+  nil)
+
 (provide 'libelcouch)
 ;;; libelcouch.el ends here
