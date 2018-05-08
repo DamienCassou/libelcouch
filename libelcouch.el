@@ -85,6 +85,15 @@ considered to have failed."
   "Return the name of ENTITY."
   (libelcouch--named-entity-name entity))
 
+(cl-defgeneric libelcouch-entity-full-name ((entity libelcouch-named-entity))
+  "Return the full name of ENTITY's parent followed by ENTITY name."
+  (format "%s/%s"
+          (libelcouch-entity-name (libelcouch-entity-parent entity))
+          (libelcouch-entity-name entity)))
+
+(cl-defmethod libelcouch-entity-full-name ((entity libelcouch-instance))
+  (libelcouch-entity-name entity))
+
 (cl-defgeneric libelcouch-entity-parent (entity)
   "Return the entity containing ENTITY.")
 
