@@ -45,6 +45,12 @@
   "List of CouchDB instances."
   :type 'list)
 
+(defcustom libelcouch-timeout 10
+  "Timeout in seconds for calls to the CouchDB instance.
+Number of seconds before a call to CouchDB without answer is
+considered to have failed."
+  :type 'number)
+
 
 ;;; Structures
 
@@ -145,6 +151,7 @@
   "Evaluate function with the children of ENTITY as parameter."
   (request
    (libelcouch--entity-children-url entity)
+   :timeout libelcouch-timeout
    :headers '(("Content-Type" . "application/json")
               ("Accept" . "application/json"))
    :parser 'json-read
