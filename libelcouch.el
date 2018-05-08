@@ -160,6 +160,14 @@ considered to have failed."
 
 ;;; Navigating
 
+(defun libelcouch-instances ()
+  "Return a list of couchdb instances built from `libelcouch-couchdb-instances'."
+  (mapcar
+   (lambda (instance-data) (libelcouch--instance-create
+                       :name (car instance-data)
+                       :url (cadr instance-data)))
+   libelcouch-couchdb-instances))
+
 (cl-defgeneric libelcouch-entity-list (entity function)
   "Evaluate function with the children of ENTITY as parameter."
   (request
