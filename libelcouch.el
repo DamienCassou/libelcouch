@@ -178,7 +178,6 @@ considered to have failed."
    :parser 'json-read
    :success (cl-function
              (lambda (&key data &allow-other-keys)
-               (message "json: %S" data)
                (let* ((children (libelcouch--entity-create-children-from-json entity data)))
                  (funcall function children))))
    :error (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
