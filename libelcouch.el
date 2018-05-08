@@ -124,6 +124,10 @@ considered to have failed."
 (cl-defmethod libelcouch-entity-url ((instance libelcouch-instance))
   (libelcouch--instance-url instance))
 
+(defun libelcouch-document-revision (document)
+  "Return the revision of DOCUMENT as a string."
+  (libelcouch--document-revision document))
+
 
 ;;; Private helpers
 
