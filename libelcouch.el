@@ -157,6 +157,10 @@ considered to have failed."
 (cl-defmethod libelcouch--entity-children-url ((database libelcouch-database))
   (format "%s/%s" (libelcouch-entity-url database) "_all_docs"))
 
+(cl-defun libelcouch--request-error (&rest args &key error-thrown &allow-other-keys)
+  "Report an error when communication with an instance fails."
+  (error "Got error: %S" error-thrown))
+
 
 ;;; Navigating
 
@@ -180,8 +184,8 @@ considered to have failed."
              (lambda (&key data &allow-other-keys)
                (let* ((children (libelcouch--entity-create-children-from-json entity data)))
                  (funcall function children))))
-   :error (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
-                         (message "Got error: %S" error-thrown)))))
+   :error #'libelcouch--request-error)
+  nil)
 
 (provide 'libelcouch)
 ;;; libelcouch.el ends here
