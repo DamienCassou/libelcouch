@@ -24,9 +24,9 @@
 ;;; Commentary:
 
 ;; The package libelcouch is an Emacs library client to communicate with
-;; Music Player Daemon (MPD), a flexible, powerful, server-side
-;; application for playing music.  For a user interface, please check
-;; the mpdel project instead (which depends on this one).
+;; CouchDB (https://couchdb.apache.org/), a database focusing on ease of
+;; use and having a scalable architecture.  For a user interface, please
+;; check the elcouch project instead (which depends on this one).
 
 ;;; Code:
 (require 'cl-lib)
