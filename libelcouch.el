@@ -4,7 +4,7 @@
 
 ;; Author: Damien Cassou <damien@cassou.me>
 ;; Keywords: tools
-;; Url: https:///DamienCassou/mpdel
+;; Url: https://gitlab.petton.fr/elcouch/libelcouch/
 ;; Package-requires: ((emacs "25.1") (request "0.3.0"))
 ;; Version: 0.4.0
 
