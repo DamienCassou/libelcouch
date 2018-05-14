@@ -5,7 +5,7 @@
 ;; Author: Damien Cassou <damien@cassou.me>
 ;; Keywords: tools
 ;; Url: https:///DamienCassou/mpdel
-;; Package-requires: ((emacs "25.1"))
+;; Package-requires: ((emacs "25.1") (request "0.3.0"))
 ;; Version: 0.3.0
 
 ;; This program is free software; you can redistribute it and/or modify
