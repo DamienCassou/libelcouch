@@ -137,9 +137,10 @@ considered to have failed."
 (cl-defmethod libelcouch--entity-create-children-from-json ((database libelcouch-database) json)
   (let ((documents-json (map-elt json 'rows)))
     (mapcar
-     (lambda (document-json) (libelcouch--document-create
-                         :name (map-elt document-json 'id)
-                         :database database))
+     (lambda (document-json)
+       (libelcouch--document-create
+        :name (map-elt document-json 'id)
+        :database database))
      documents-json)))
 
 (cl-defgeneric libelcouch--entity-children-url (entity)
@@ -161,9 +162,10 @@ considered to have failed."
 (defun libelcouch-instances ()
   "Return a list of couchdb instances built from `libelcouch-couchdb-instances'."
   (mapcar
-   (lambda (instance-data) (libelcouch--instance-create
-                       :name (car instance-data)
-                       :url (cadr instance-data)))
+   (lambda (instance-data)
+     (libelcouch--instance-create
+      :name (car instance-data)
+      :url (cadr instance-data)))
    libelcouch-couchdb-instances))
 
 (cl-defgeneric libelcouch-entity-list (entity function)
