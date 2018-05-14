@@ -83,8 +83,8 @@
     (should (equal
              children
              (list
-              (libelcouch--document-create :name "doc1" :revision "rev1" :database database)
-              (libelcouch--document-create :name "doc2" :revision "rev2" :database database))))))
+              (libelcouch--document-create :name "doc1" :database database)
+              (libelcouch--document-create :name "doc2" :database database))))))
 
 (ert-deftest libelcouch--entity-children-url ()
   (let* ((instance (libelcouch--instance-create :name "Instance" :url "http://localhost:5984"))

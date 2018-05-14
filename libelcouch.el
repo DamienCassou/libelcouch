@@ -75,7 +75,6 @@ considered to have failed."
                (:include libelcouch-named-entity)
                (:constructor libelcouch--document-create)
                (:conc-name libelcouch--document-))
-  (revision nil :read-only t)
   (database nil :read-only t))
 
 
@@ -124,10 +123,6 @@ considered to have failed."
 (cl-defmethod libelcouch-entity-url ((instance libelcouch-instance))
   (libelcouch--instance-url instance))
 
-(defun libelcouch-document-revision (document)
-  "Return the revision of DOCUMENT as a string."
-  (libelcouch--document-revision document))
-
 
 ;;; Private helpers
 
@@ -144,7 +139,6 @@ considered to have failed."
     (mapcar
      (lambda (document-json) (libelcouch--document-create
                          :name (map-elt document-json 'id)
-                         :revision (map-nested-elt document-json '(value rev))
                          :database database))
      documents-json)))
 
