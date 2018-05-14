@@ -153,7 +153,7 @@ considered to have failed."
 
 (cl-defun libelcouch--request-error (&rest args &key error-thrown &allow-other-keys)
   "Report an error when communication with an instance fails."
-  (error "Got error: %S" error-thrown))
+  (message "Got error: %S" error-thrown))
 
 
 ;;; Navigating
