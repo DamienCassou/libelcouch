@@ -194,5 +194,16 @@ considered to have failed."
    :error #'libelcouch--request-error)
   nil)
 
+(defun libelcouch-document-save (document content function)
+  "Evaluate FUNCTION when CONTENT is saved as new value for DOCUMENT."
+  (request
+   (url-encode-url (libelcouch-entity-url document))
+   :type "PUT"
+   :headers '(("Content-Type" . "application/json"))
+   :data (or content (encode-coding-string (buffer-substring-no-properties (point-min) (point-max)) 'utf-8))
+   :success (cl-function (lambda (&rest _args) (funcall function)))
+   :error #'libelcouch--request-error)
+  nil)
+
 (provide 'libelcouch)
 ;;; libelcouch.el ends here
