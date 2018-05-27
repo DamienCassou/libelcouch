@@ -37,9 +37,9 @@
 
 ;;; Customization
 
-(defgroup elcouch nil
+(defgroup libelcouch nil
   "View and manipulate CouchDB databases."
-  :group 'externa)
+  :group 'external)
 
 (defcustom libelcouch-couchdb-instances nil
   "List of CouchDB instances."
