@@ -207,5 +207,17 @@ considered to have failed."
    :error #'libelcouch--request-error)
   nil)
 
+(defun libelcouch-document-delete (document revision function)
+  "Delete DOCUMENT at REVISION and evaluate FUNCTION."
+  (request
+   (url-encode-url (libelcouch-entity-url document))
+   :type "DELETE"
+   :params `(("rev" . ,revision))
+   :headers '(("Content-Type" . "application/json")
+              ("Accept" . "application/json"))
+   :success (cl-function (lambda (&rest _args) (funcall function)))
+   :error #'libelcouch--request-error)
+  nil)
+
 (provide 'libelcouch)
 ;;; libelcouch.el ends here
