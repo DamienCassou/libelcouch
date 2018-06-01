@@ -34,6 +34,8 @@
 (require 'json)
 (require 'map)
 
+(require 'subr-x)
+
 
 ;;; Customization
 
@@ -122,6 +124,28 @@ considered to have failed."
 
 (cl-defmethod libelcouch-entity-url ((instance libelcouch-instance))
   (libelcouch--instance-url instance))
+
+(defun libelcouch-entity-from-url (url)
+  "Return an entity by reading URL, a string."
+  (let* ((url-obj (url-generic-parse-url url))
+         (host (url-host url-obj))
+         (path (car (url-path-and-query url-obj)))
+         (path-components (split-string path "/" t))
+         ;; authority is the beginning of the url until the path starts:
+         (authority (substring url 0 (unless (string-empty-p path)
+                                       (- (length path)))))
+         (instance (libelcouch--instance-create
+                    :name host
+                    :url authority))
+         (database (when (and instance (>= (length path-components) 1))
+                     (libelcouch--database-create
+                      :name (car path-components)
+                      :instance instance)))
+         (document (when (and database (>= (length path-components) 2))
+                     (libelcouch--document-create
+                      :name (cadr path-components)
+                      :database database))))
+    (or document database instance)))
 
 
 ;;; Private helpers
