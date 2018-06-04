@@ -147,6 +147,15 @@ considered to have failed."
                       :database database))))
     (or document database instance)))
 
+(defun libelcouch-choose-instance ()
+  "Ask user for a CouchDB instance among `libelcouch-couchdb-instances'."
+  (let* ((instances (libelcouch-instances))
+         (instance-name (completing-read "CouchDB instance: "
+                                         (mapcar #'libelcouch-entity-name instances)
+                                         nil
+                                         t)))
+    (cl-find instance-name instances :test #'string= :key #'libelcouch-entity-name)))
+
 
 ;;; Private helpers
 
