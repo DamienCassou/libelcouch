@@ -6,7 +6,7 @@
 ;; Keywords: tools
 ;; Url: https://gitlab.petton.fr/elcouch/libelcouch/
 ;; Package-requires: ((emacs "25.1") (request "0.3.0"))
-;; Version: 0.7.0
+;; Version: 0.8.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
