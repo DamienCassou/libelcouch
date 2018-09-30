@@ -1,44 +1,27 @@
-SRCS = libelcouch.el
-TESTS = test/libelcouch-test.el
+ELPA_DEPENDENCIES=package-lint request
 
-LOAD_PATH = -L . -L ../package-lint -L ../request
+ELPA_ARCHIVES=melpa
 
-EMACSBIN ?= emacs
-BATCH     = $(EMACSBIN) -Q --batch $(LOAD_PATH) \
-		--eval "(setq load-prefer-newer t)" \
-		--eval "(require 'package)" \
-		--eval "(add-to-list 'package-archives '(\"melpa-stable\" . \"http://stable.melpa.org/packages/\"))" \
-		--eval "(setq enable-dir-local-variables nil)" \
-		--funcall package-initialize
+TEST_ERT_FILES=test/libelcouch-test.el
 
-.PHONY: all ci-dependencies check test lint
+LINT_CHECKDOC_FILES=$(wildcard *.el) $(wildcard test/*.el)
+LINT_CHECKDOC_EVAL=(setq checkdoc-arguments-in-order-flag nil)
+LINT_PACKAGE_LINT_FILES=$(wildcard *.el)
+LINT_COMPILE_FILES=$(wildcard *.el) $(wildcard test/*.el)
 
-all: check
+CURL = curl --fail --silent --show-error --insecure --location --retry 9 --retry-delay 9
+GITHUB = https://raw.githubusercontent.com
 
-ci-dependencies:
-	# Install dependencies in ~/.emacs.d/elpa
-	$(BATCH) \
-	--funcall package-refresh-contents \
-	--eval "(package-install 'package-lint)" \
-	--eval "(package-install 'request)"
+makel.mk:
+	# Download makel
+	@if [ -f ../makel/makel.mk ]; then \
+		ln -s ../makel/makel.mk .; \
+	else \
+		curl \
+		--fail --silent --show-error --insecure --location \
+		--retry 9 --retry-delay 9 \
+		-O https://gitlab.petton.fr/DamienCassou/makel/raw/v0.1.0/makel.mk; \
+	fi
 
-check: lint test
-
-test:
-	$(BATCH) --eval "(progn\
-	(load-file \"test/libelcouch-test.el\")\
-	(ert-run-tests-batch-and-exit))"
-
-lint :
-	# Byte compile all and stop on any warning or error
-	$(BATCH) \
-	--eval "(setq byte-compile-error-on-warn t)" \
-	-f batch-byte-compile ${SRCS} ${TESTS}
-
-	# Run package-lint to check for packaging mistakes
-	$(BATCH) \
-	--eval "(require 'package-lint)" \
-	-f package-lint-batch-and-exit ${SRCS}
-
-	# Run checkdoc to check Emacs Lisp conventions
-	$(BATCH) --eval "(mapcar #'checkdoc-file '($(patsubst %, \"%\", ${SRCS})))"
+# Include emake.mk if present
+-include makel.mk
