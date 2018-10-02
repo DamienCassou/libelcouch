@@ -5,7 +5,7 @@ ELPA_ARCHIVES=melpa
 TEST_ERT_FILES=test/libelcouch-test.el
 
 LINT_CHECKDOC_FILES=$(wildcard *.el) $(wildcard test/*.el)
-LINT_CHECKDOC_EVAL=(setq checkdoc-arguments-in-order-flag nil)
+LINT_CHECKDOC_OPTIONS=--eval "(setq checkdoc-arguments-in-order-flag nil)"
 LINT_PACKAGE_LINT_FILES=$(wildcard *.el)
 LINT_COMPILE_FILES=$(wildcard *.el) $(wildcard test/*.el)
 
@@ -20,7 +20,7 @@ makel.mk:
 		curl \
 		--fail --silent --show-error --insecure --location \
 		--retry 9 --retry-delay 9 \
-		-O https://gitlab.petton.fr/DamienCassou/makel/raw/v0.1.0/makel.mk; \
+		-O https://gitlab.petton.fr/DamienCassou/makel/raw/v0.2.0/makel.mk; \
 	fi
 
 # Include emake.mk if present
