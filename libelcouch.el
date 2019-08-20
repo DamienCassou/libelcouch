@@ -240,17 +240,35 @@ considered to have failed."
    :error #'libelcouch--request-error)
   nil)
 
-(defun libelcouch-document-delete (document revision function)
-  "Delete DOCUMENT at REVISION and evaluate FUNCTION."
+(defun libelcouch-document-latest-revision (document function)
+  "Pass the revision of DOCUMENT to FUNCTION."
+  (libelcouch-document-content
+   document
+   (lambda (content)
+     (with-temp-buffer
+       (insert content)
+       (goto-char (point-min))
+       (funcall function (map-elt (json-read) '_rev))))))
+
+(defun libelcouch-document-delete (document revision &optional function)
+  "Delete DOCUMENT and evaluate FUNCTION.
+If REVISION is not the latest, signal an error."
   (request
    (url-encode-url (libelcouch-entity-url document))
    :type "DELETE"
    :params `(("rev" . ,revision))
    :headers '(("Content-Type" . "application/json")
               ("Accept" . "application/json"))
-   :success (cl-function (lambda (&rest _args) (funcall function)))
+   :success (cl-function (lambda (&rest _args) (when function (funcall function))))
    :error #'libelcouch--request-error)
   nil)
+
+(defun libelcouch-document-delete-latest (document &optional function)
+  "Delete DOCUMENT and evaluate FUNCTION."
+  (libelcouch-document-latest-revision
+   document
+   (lambda (revision)
+     (libelcouch-document-delete document revision function))))
 
 (provide 'libelcouch)
 ;;; libelcouch.el ends here
