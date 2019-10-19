@@ -1,6 +1,6 @@
-ELPA_DEPENDENCIES=package-lint request
+ELPA_DEPENDENCIES=package-lint request let-alist
 
-ELPA_ARCHIVES=melpa
+ELPA_ARCHIVES=melpa gnu
 
 TEST_ERT_FILES=test/libelcouch-test.el
 
