@@ -93,36 +93,43 @@ considered to have failed."
           (libelcouch-entity-name entity)))
 
 (cl-defmethod libelcouch-entity-full-name ((entity libelcouch-instance))
+  "Return the name of ENTITY."
   (libelcouch-entity-name entity))
 
 (cl-defgeneric libelcouch-entity-parent (entity)
   "Return the entity containing ENTITY.")
 
 (cl-defmethod libelcouch-entity-parent ((database libelcouch-database))
+  "Return the parent of DATABASE, an instance."
   (libelcouch--database-instance database))
 
 (cl-defmethod libelcouch-entity-parent ((document libelcouch-document))
+  "Return the parent of DOCUMENT, a database."
   (libelcouch--document-database document))
 
 (cl-defgeneric libelcouch-entity-instance (entity)
   "Return the CouchDB instance of ENTITY.")
 
 (cl-defmethod libelcouch-entity-instance ((instance libelcouch-instance))
+  "Return INSTANCE."
   instance)
 
 (cl-defmethod libelcouch-entity-instance ((database libelcouch-database))
+  "Return the instance of DATABASE."
   (libelcouch--database-instance database))
 
 (cl-defmethod libelcouch-entity-instance ((document libelcouch-document))
+  "Return the instance of DOCUMENT."
   (libelcouch-entity-instance (libelcouch--document-database document)))
 
 (cl-defgeneric libelcouch-entity-url (entity)
-  "Return the url of ENTITY."
+  "Return the URL of ENTITY."
   (format "%s/%s"
           (libelcouch-entity-url (libelcouch-entity-parent entity))
           (libelcouch-entity-name entity)))
 
 (cl-defmethod libelcouch-entity-url ((instance libelcouch-instance))
+  "Return the URL of INSTANCE."
   (libelcouch--instance-url instance))
 
 (defun libelcouch-entity-from-url (url)
@@ -163,11 +170,13 @@ considered to have failed."
   "Create and return children of ENTITY from a JSON object.")
 
 (cl-defmethod libelcouch--entity-create-children-from-json ((instance libelcouch-instance) json)
+  "Return the list of INSTANCE's databases as stored in JSON."
   (mapcar
    (lambda (database-name) (libelcouch--database-create :name database-name :instance instance))
    json))
 
 (cl-defmethod libelcouch--entity-create-children-from-json ((database libelcouch-database) json)
+  "Return the list of DATABASE's documents as stored in JSON."
   (let ((documents-json (map-elt json 'rows)))
     (mapcar
      (lambda (document-json)
@@ -180,20 +189,24 @@ considered to have failed."
   "Return the path to query all children of ENTITY.")
 
 (cl-defmethod libelcouch--entity-children-url ((instance libelcouch-instance))
+  "Return the URL of INSTANCE's databases."
   (format "%s/%s" (libelcouch-entity-url instance) "_all_dbs"))
 
 (cl-defmethod libelcouch--entity-children-url ((database libelcouch-database))
+  "Return the URL of DATABASE's documents."
   (format "%s/%s" (libelcouch-entity-url database) "_all_docs"))
 
 (cl-defun libelcouch--request-error (&rest args &key error-thrown &allow-other-keys)
-  "Report an error when communication with an instance fails."
+  "Report an error when communication with an instance fails.
+
+Displays ERROR-THROWN, ignore ARGS."
   (message "Got error: %S" error-thrown))
 
 
 ;;; Navigating
 
 (defun libelcouch-instances ()
-  "Return a list of couchdb instances built from `libelcouch-couchdb-instances'."
+  "Return a list of COUCHDB instances built from `libelcouch-couchdb-instances'."
   (mapcar
    (lambda (instance-data)
      (libelcouch--instance-create
@@ -202,7 +215,7 @@ considered to have failed."
    libelcouch-couchdb-instances))
 
 (cl-defgeneric libelcouch-entity-list (entity function)
-  "Evaluate function with the children of ENTITY as parameter."
+  "Evaluate FUNCTION with the children of ENTITY as parameter."
   (request
    (url-encode-url (libelcouch--entity-children-url entity))
    :timeout libelcouch-timeout
@@ -272,3 +285,5 @@ If REVISION is not the latest, signal an error."
 
 (provide 'libelcouch)
 ;;; libelcouch.el ends here
+
+                                        ; LocalWords:  CouchDB
