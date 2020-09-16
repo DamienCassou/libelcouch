@@ -59,7 +59,8 @@ considered to have failed."
 (cl-defstruct (libelcouch-named-entity
                (:constructor libelcouch--named-entity-create)
                (:conc-name libelcouch--named-entity-))
-  (name nil :read-only t))
+  (name nil :read-only t)
+  (parent nil :read-only t))
 
 (cl-defstruct (libelcouch-instance
                (:include libelcouch-named-entity)
@@ -71,13 +72,13 @@ considered to have failed."
                (:include libelcouch-named-entity)
                (:constructor libelcouch--database-create)
                (:conc-name libelcouch--database-))
-  (instance nil :read-only t))
+  nil)
 
 (cl-defstruct (libelcouch-document
                (:include libelcouch-named-entity)
                (:constructor libelcouch--document-create)
                (:conc-name libelcouch--document-))
-  (database nil :read-only t))
+  nil)
 
 
 ;;; Accessors
@@ -85,6 +86,10 @@ considered to have failed."
 (cl-defgeneric libelcouch-entity-name ((entity libelcouch-named-entity))
   "Return the name of ENTITY."
   (libelcouch--named-entity-name entity))
+
+(cl-defgeneric libelcouch-entity-parent ((entity libelcouch-named-entity))
+  "Return the entity containing ENTITY, nil if none."
+  (libelcouch--named-entity-parent entity))
 
 (cl-defgeneric libelcouch-entity-full-name ((entity libelcouch-named-entity))
   "Return the full name of ENTITY's parent followed by ENTITY name."
@@ -96,31 +101,13 @@ considered to have failed."
   "Return the name of ENTITY."
   (libelcouch-entity-name entity))
 
-(cl-defgeneric libelcouch-entity-parent (entity)
-  "Return the entity containing ENTITY.")
-
-(cl-defmethod libelcouch-entity-parent ((database libelcouch-database))
-  "Return the parent of DATABASE, an instance."
-  (libelcouch--database-instance database))
-
-(cl-defmethod libelcouch-entity-parent ((document libelcouch-document))
-  "Return the parent of DOCUMENT, a database."
-  (libelcouch--document-database document))
-
 (cl-defgeneric libelcouch-entity-instance (entity)
-  "Return the CouchDB instance of ENTITY.")
+  "Return the CouchDB instance of ENTITY."
+  (and entity (libelcouch-entity-instance (libelcouch-entity-parent entity))))
 
 (cl-defmethod libelcouch-entity-instance ((instance libelcouch-instance))
   "Return INSTANCE."
   instance)
-
-(cl-defmethod libelcouch-entity-instance ((database libelcouch-database))
-  "Return the instance of DATABASE."
-  (libelcouch--database-instance database))
-
-(cl-defmethod libelcouch-entity-instance ((document libelcouch-document))
-  "Return the instance of DOCUMENT."
-  (libelcouch-entity-instance (libelcouch--document-database document)))
 
 (cl-defgeneric libelcouch-entity-url (entity)
   "Return the URL of ENTITY."
@@ -147,11 +134,11 @@ considered to have failed."
          (database (when (and instance (>= (length path-components) 1))
                      (libelcouch--database-create
                       :name (car path-components)
-                      :instance instance)))
+                      :parent instance)))
          (document (when (and database (>= (length path-components) 2))
                      (libelcouch--document-create
                       :name (cadr path-components)
-                      :database database))))
+                      :parent database))))
     (or document database instance)))
 
 (defun libelcouch-choose-instance ()
@@ -172,7 +159,7 @@ considered to have failed."
 (cl-defmethod libelcouch--entity-create-children-from-json ((instance libelcouch-instance) json)
   "Return the list of INSTANCE's databases as stored in JSON."
   (mapcar
-   (lambda (database-name) (libelcouch--database-create :name database-name :instance instance))
+   (lambda (database-name) (libelcouch--database-create :name database-name :parent instance))
    json))
 
 (cl-defmethod libelcouch--entity-create-children-from-json ((database libelcouch-database) json)
@@ -182,7 +169,7 @@ considered to have failed."
      (lambda (document-json)
        (libelcouch--document-create
         :name (map-elt document-json 'id)
-        :database database))
+        :parent database))
      documents-json)))
 
 (cl-defgeneric libelcouch--entity-children-url (entity)
