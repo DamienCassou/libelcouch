@@ -239,43 +239,43 @@ Return nil if no authentication information is found for INSTANCE."
 (cl-defgeneric libelcouch-entity-list (entity function)
   "Evaluate FUNCTION with the children of ENTITY as parameter."
   (request
-   (url-encode-url (libelcouch--entity-children-url entity))
-   :timeout libelcouch-timeout
+    (url-encode-url (libelcouch--entity-children-url entity))
+    :timeout libelcouch-timeout
     :headers `(("Content-Type" . "application/json")
                ("Accept" . "application/json")
                ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance entity))))
-   :parser 'json-read
-   :success (cl-function
-             (lambda (&key data &allow-other-keys)
-               (let* ((children (libelcouch--entity-create-children-from-json entity data)))
-                 (funcall function children))))
-   :error #'libelcouch--request-error)
+    :parser 'json-read
+    :success (cl-function
+              (lambda (&key data &allow-other-keys)
+                (let* ((children (libelcouch--entity-create-children-from-json entity data)))
+                  (funcall function children))))
+    :error #'libelcouch--request-error)
   nil)
 
 (defun libelcouch-document-content (document function)
   "Evaluate FUNCTION with the content of DOCUMENT as parameter."
   (request
-   (url-encode-url (libelcouch-entity-url document))
-   :timeout libelcouch-timeout
-   :parser (lambda () (decode-coding-string (buffer-substring-no-properties (point) (point-max)) 'utf-8))
+    (url-encode-url (libelcouch-entity-url document))
+    :timeout libelcouch-timeout
+    :parser (lambda () (decode-coding-string (buffer-substring-no-properties (point) (point-max)) 'utf-8))
     :headers `(("Accept" . "application/json")
                ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance document))) )
-   :success (cl-function
-             (lambda (&key data &allow-other-keys)
-               (funcall function data)))
-   :error #'libelcouch--request-error)
+    :success (cl-function
+              (lambda (&key data &allow-other-keys)
+                (funcall function data)))
+    :error #'libelcouch--request-error)
   nil)
 
 (defun libelcouch-document-save (document content function)
   "Evaluate FUNCTION when CONTENT is saved as new value for DOCUMENT."
   (request
-   (url-encode-url (libelcouch-entity-url document))
-   :type "PUT"
+    (url-encode-url (libelcouch-entity-url document))
+    :type "PUT"
     :headers `(("Content-Type" . "application/json")
                ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance document))) )
-   :data (or content (encode-coding-string (buffer-substring-no-properties (point-min) (point-max)) 'utf-8))
-   :success (cl-function (lambda (&rest _args) (funcall function)))
-   :error #'libelcouch--request-error)
+    :data (or content (encode-coding-string (buffer-substring-no-properties (point-min) (point-max)) 'utf-8))
+    :success (cl-function (lambda (&rest _args) (funcall function)))
+    :error #'libelcouch--request-error)
   nil)
 
 (defun libelcouch-document-latest-revision (document function)
@@ -292,14 +292,14 @@ Return nil if no authentication information is found for INSTANCE."
   "Delete DOCUMENT and evaluate FUNCTION.
 If REVISION is not the latest, signal an error."
   (request
-   (url-encode-url (libelcouch-entity-url document))
-   :type "DELETE"
-   :params `(("rev" . ,revision))
+    (url-encode-url (libelcouch-entity-url document))
+    :type "DELETE"
+    :params `(("rev" . ,revision))
     :headers `(("Content-Type" . "application/json")
                ("Accept" . "application/json")
                ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance document))))
-   :success (cl-function (lambda (&rest _args) (when function (funcall function))))
-   :error #'libelcouch--request-error)
+    :success (cl-function (lambda (&rest _args) (when function (funcall function))))
+    :error #'libelcouch--request-error)
   nil)
 
 (defun libelcouch-document-delete-latest (document &optional function)
