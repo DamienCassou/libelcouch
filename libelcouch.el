@@ -5,7 +5,7 @@
 ;; Author: Damien Cassou <damien@cassou.me>
 ;; Keywords: tools
 ;; Url: https://gitlab.petton.fr/elcouch/libelcouch/
-;; Package-requires: ((emacs "25.1") (request "0.3.0"))
+;; Package-requires: ((emacs "26.1") (request "0.3.0"))
 ;; Version: 0.9.0
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -202,6 +202,28 @@ considered to have failed."
 Displays ERROR-THROWN, ignore ARGS."
   (message "Got error: %S" error-thrown))
 
+(defun libelcouch--auth-search (instance)
+  "Return (USER . PASSWORD) associated with INSTANCE.
+Return nil if no authentication information is found for INSTANCE."
+  (if-let* ((url-obj (url-generic-parse-url (libelcouch--instance-url instance)))
+            (host (url-host url-obj))
+            (port (or (url-portspec url-obj) 5984))
+            (entry (car (auth-source-search
+                         :max 1
+                         :host host
+                         :port port)))
+            (user (map-elt entry :user))
+            (password (map-elt entry :secret)))
+      (cons user
+            (if (stringp password)
+                password
+              (funcall password)))))
+
+(defun libelcouch--basic-auth-header (instance)
+  "Return a basic authentication header for INSTANCE."
+  (pcase-let ((`(,username . ,password) (libelcouch--auth-search instance)))
+    (format "Basic %s" (base64-encode-string (concat username ":" password)))))
+
 
 ;;; Navigating
 
@@ -219,8 +241,9 @@ Displays ERROR-THROWN, ignore ARGS."
   (request
    (url-encode-url (libelcouch--entity-children-url entity))
    :timeout libelcouch-timeout
-   :headers '(("Content-Type" . "application/json")
-              ("Accept" . "application/json"))
+    :headers `(("Content-Type" . "application/json")
+               ("Accept" . "application/json")
+               ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance entity))))
    :parser 'json-read
    :success (cl-function
              (lambda (&key data &allow-other-keys)
@@ -235,7 +258,8 @@ Displays ERROR-THROWN, ignore ARGS."
    (url-encode-url (libelcouch-entity-url document))
    :timeout libelcouch-timeout
    :parser (lambda () (decode-coding-string (buffer-substring-no-properties (point) (point-max)) 'utf-8))
-   :headers '(("Accept" . "application/json"))
+    :headers `(("Accept" . "application/json")
+               ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance document))) )
    :success (cl-function
              (lambda (&key data &allow-other-keys)
                (funcall function data)))
@@ -247,7 +271,8 @@ Displays ERROR-THROWN, ignore ARGS."
   (request
    (url-encode-url (libelcouch-entity-url document))
    :type "PUT"
-   :headers '(("Content-Type" . "application/json"))
+    :headers `(("Content-Type" . "application/json")
+               ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance document))) )
    :data (or content (encode-coding-string (buffer-substring-no-properties (point-min) (point-max)) 'utf-8))
    :success (cl-function (lambda (&rest _args) (funcall function)))
    :error #'libelcouch--request-error)
@@ -270,8 +295,9 @@ If REVISION is not the latest, signal an error."
    (url-encode-url (libelcouch-entity-url document))
    :type "DELETE"
    :params `(("rev" . ,revision))
-   :headers '(("Content-Type" . "application/json")
-              ("Accept" . "application/json"))
+    :headers `(("Content-Type" . "application/json")
+               ("Accept" . "application/json")
+               ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance document))))
    :success (cl-function (lambda (&rest _args) (when function (funcall function))))
    :error #'libelcouch--request-error)
   nil)
