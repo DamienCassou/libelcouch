@@ -109,6 +109,14 @@ considered to have failed."
   "Return INSTANCE."
   instance)
 
+(cl-defgeneric libelcouch-entity-database (entity)
+  "Return the DATABASE containing ENTITY."
+  (and entity (libelcouch-entity-database (libelcouch-entity-parent entity))))
+
+(cl-defmethod libelcouch-entity-database ((database libelcouch-database))
+  "Return DATABASE."
+  database)
+
 (cl-defgeneric libelcouch-entity-url (entity)
   "Return the URL of ENTITY."
   (format "%s/%s"
