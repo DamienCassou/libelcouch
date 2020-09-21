@@ -80,6 +80,25 @@ considered to have failed."
                (:conc-name libelcouch--document-))
   nil)
 
+(cl-defstruct (libelcouch-design-document
+               (:include libelcouch-named-entity)
+               (:constructor libelcouch--design-document-create)
+               (:conc-name libelcouch--design-document-))
+  nil)
+
+(cl-defstruct (libelcouch-view
+               (:include libelcouch-named-entity)
+               (:constructor libelcouch--view-create)
+               (:conc-name libelcouch--view-))
+  nil)
+
+(cl-defstruct (libelcouch-view-row
+               (:include libelcouch-named-entity)
+               (:constructor libelcouch--view-row-create)
+               (:conc-name libelcouch--view-row-))
+  (key nil :read-only t)
+  (value nil :read-only t))
+
 
 ;;; Accessors
 
@@ -127,6 +146,12 @@ considered to have failed."
   "Return the URL of INSTANCE."
   (libelcouch--instance-url instance))
 
+(cl-defmethod libelcouch-entity-url ((view libelcouch-view))
+  "Return the URL of VIEW."
+  (format "%s/_view/%s"
+          (libelcouch-entity-url (libelcouch-entity-parent view))
+          (libelcouch-entity-name view)))
+
 (defun libelcouch-entity-from-url (url)
   "Return an entity by reading URL, a string."
   (let* ((url-obj (url-generic-parse-url url))
@@ -148,6 +173,20 @@ considered to have failed."
                       :name (cadr path-components)
                       :parent database))))
     (or document database instance)))
+
+(defun libelcouch-view-row-key (view-row)
+  "Return the key associated with VIEW-ROW."
+  (libelcouch--view-row-key view-row))
+
+(defun libelcouch-view-row-value (view-row)
+  "Return the value associated with VIEW-ROW."
+  (libelcouch--view-row-value view-row))
+
+(defun libelcouch-view-row-document (view-row)
+  "Create and return the document associated with VIEW-ROW."
+  (let ((document-name (libelcouch-entity-name view-row))
+        (database (libelcouch-entity-database view-row)))
+    (libelcouch--create-document document-name database)))
 
 (defun libelcouch-choose-instance ()
   "Ask user for a CouchDB instance among `libelcouch-couchdb-instances'."
@@ -175,13 +214,43 @@ considered to have failed."
   (let ((documents-json (map-elt json 'rows)))
     (mapcar
      (lambda (document-json)
-       (libelcouch--document-create
-        :name (map-elt document-json 'id)
-        :parent database))
+       (libelcouch--create-document (map-elt document-json 'id) database))
      documents-json)))
 
+(cl-defmethod libelcouch--entity-create-children-from-json ((design-document libelcouch-design-document) json)
+  "Return the list of DESIGN-DOCUMENT's views as stored in JSON."
+  (let ((views-json (map-elt json 'views)))
+    (mapcar
+     (lambda (view-json)
+       (libelcouch--view-create :name (symbol-name (car view-json)) :parent design-document))
+     views-json)))
+
+(cl-defmethod libelcouch--entity-create-children-from-json ((view libelcouch-view) json)
+  "Return the list of VIEW's rows as stored in JSON."
+  (let ((views-json (map-elt json 'rows)))
+    (mapcar
+     (lambda (view-json)
+       (libelcouch--view-row-create
+        :name (map-elt view-json 'id)
+        :parent view
+        :key (map-elt view-json 'key)
+        :value (map-elt view-json 'value)))
+     views-json)))
+
+(defun libelcouch--create-document (name database)
+  "Create either a normal document or a design document.
+
+NAME is the name of the new document.  If it starts with
+\"_design\", a design document will be created.
+
+DATABASE is the parent of the new document."
+  (if (string-prefix-p "_design/" name)
+      (libelcouch--design-document-create :name name :parent database)
+    (libelcouch--document-create :name name :parent database)))
+
 (cl-defgeneric libelcouch--entity-children-url (entity)
-  "Return the path to query all children of ENTITY.")
+  "Return the path to query all children of ENTITY."
+  (libelcouch-entity-url entity))
 
 (cl-defmethod libelcouch--entity-children-url ((instance libelcouch-instance))
   "Return the URL of INSTANCE's databases."
