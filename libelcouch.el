@@ -59,7 +59,8 @@ considered to have failed."
 (cl-defstruct (libelcouch-named-entity
                (:constructor libelcouch--named-entity-create)
                (:conc-name libelcouch--named-entity-))
-  (name nil :read-only t))
+  (name nil :read-only t)
+  (parent nil :read-only t))
 
 (cl-defstruct (libelcouch-instance
                (:include libelcouch-named-entity)
@@ -71,13 +72,32 @@ considered to have failed."
                (:include libelcouch-named-entity)
                (:constructor libelcouch--database-create)
                (:conc-name libelcouch--database-))
-  (instance nil :read-only t))
+  nil)
 
 (cl-defstruct (libelcouch-document
                (:include libelcouch-named-entity)
                (:constructor libelcouch--document-create)
                (:conc-name libelcouch--document-))
-  (database nil :read-only t))
+  nil)
+
+(cl-defstruct (libelcouch-design-document
+               (:include libelcouch-named-entity)
+               (:constructor libelcouch--design-document-create)
+               (:conc-name libelcouch--design-document-))
+  nil)
+
+(cl-defstruct (libelcouch-view
+               (:include libelcouch-named-entity)
+               (:constructor libelcouch--view-create)
+               (:conc-name libelcouch--view-))
+  nil)
+
+(cl-defstruct (libelcouch-view-row
+               (:include libelcouch-named-entity)
+               (:constructor libelcouch--view-row-create)
+               (:conc-name libelcouch--view-row-))
+  (key nil :read-only t)
+  (value nil :read-only t))
 
 
 ;;; Accessors
@@ -85,6 +105,10 @@ considered to have failed."
 (cl-defgeneric libelcouch-entity-name ((entity libelcouch-named-entity))
   "Return the name of ENTITY."
   (libelcouch--named-entity-name entity))
+
+(cl-defgeneric libelcouch-entity-parent ((entity libelcouch-named-entity))
+  "Return the entity containing ENTITY, nil if none."
+  (libelcouch--named-entity-parent entity))
 
 (cl-defgeneric libelcouch-entity-full-name ((entity libelcouch-named-entity))
   "Return the full name of ENTITY's parent followed by ENTITY name."
@@ -96,31 +120,21 @@ considered to have failed."
   "Return the name of ENTITY."
   (libelcouch-entity-name entity))
 
-(cl-defgeneric libelcouch-entity-parent (entity)
-  "Return the entity containing ENTITY.")
-
-(cl-defmethod libelcouch-entity-parent ((database libelcouch-database))
-  "Return the parent of DATABASE, an instance."
-  (libelcouch--database-instance database))
-
-(cl-defmethod libelcouch-entity-parent ((document libelcouch-document))
-  "Return the parent of DOCUMENT, a database."
-  (libelcouch--document-database document))
-
 (cl-defgeneric libelcouch-entity-instance (entity)
-  "Return the CouchDB instance of ENTITY.")
+  "Return the CouchDB instance of ENTITY."
+  (and entity (libelcouch-entity-instance (libelcouch-entity-parent entity))))
 
 (cl-defmethod libelcouch-entity-instance ((instance libelcouch-instance))
   "Return INSTANCE."
   instance)
 
-(cl-defmethod libelcouch-entity-instance ((database libelcouch-database))
-  "Return the instance of DATABASE."
-  (libelcouch--database-instance database))
+(cl-defgeneric libelcouch-entity-database (entity)
+  "Return the DATABASE containing ENTITY."
+  (and entity (libelcouch-entity-database (libelcouch-entity-parent entity))))
 
-(cl-defmethod libelcouch-entity-instance ((document libelcouch-document))
-  "Return the instance of DOCUMENT."
-  (libelcouch-entity-instance (libelcouch--document-database document)))
+(cl-defmethod libelcouch-entity-database ((database libelcouch-database))
+  "Return DATABASE."
+  database)
 
 (cl-defgeneric libelcouch-entity-url (entity)
   "Return the URL of ENTITY."
@@ -131,6 +145,12 @@ considered to have failed."
 (cl-defmethod libelcouch-entity-url ((instance libelcouch-instance))
   "Return the URL of INSTANCE."
   (libelcouch--instance-url instance))
+
+(cl-defmethod libelcouch-entity-url ((view libelcouch-view))
+  "Return the URL of VIEW."
+  (format "%s/_view/%s"
+          (libelcouch-entity-url (libelcouch-entity-parent view))
+          (libelcouch-entity-name view)))
 
 (defun libelcouch-entity-from-url (url)
   "Return an entity by reading URL, a string."
@@ -147,12 +167,26 @@ considered to have failed."
          (database (when (and instance (>= (length path-components) 1))
                      (libelcouch--database-create
                       :name (car path-components)
-                      :instance instance)))
+                      :parent instance)))
          (document (when (and database (>= (length path-components) 2))
                      (libelcouch--document-create
                       :name (cadr path-components)
-                      :database database))))
+                      :parent database))))
     (or document database instance)))
+
+(defun libelcouch-view-row-key (view-row)
+  "Return the key associated with VIEW-ROW."
+  (libelcouch--view-row-key view-row))
+
+(defun libelcouch-view-row-value (view-row)
+  "Return the value associated with VIEW-ROW."
+  (libelcouch--view-row-value view-row))
+
+(defun libelcouch-view-row-document (view-row)
+  "Create and return the document associated with VIEW-ROW."
+  (let ((document-name (libelcouch-entity-name view-row))
+        (database (libelcouch-entity-database view-row)))
+    (libelcouch--create-document document-name database)))
 
 (defun libelcouch-choose-instance ()
   "Ask user for a CouchDB instance among `libelcouch-couchdb-instances'."
@@ -172,7 +206,7 @@ considered to have failed."
 (cl-defmethod libelcouch--entity-create-children-from-json ((instance libelcouch-instance) json)
   "Return the list of INSTANCE's databases as stored in JSON."
   (mapcar
-   (lambda (database-name) (libelcouch--database-create :name database-name :instance instance))
+   (lambda (database-name) (libelcouch--database-create :name database-name :parent instance))
    json))
 
 (cl-defmethod libelcouch--entity-create-children-from-json ((database libelcouch-database) json)
@@ -180,13 +214,43 @@ considered to have failed."
   (let ((documents-json (map-elt json 'rows)))
     (mapcar
      (lambda (document-json)
-       (libelcouch--document-create
-        :name (map-elt document-json 'id)
-        :database database))
+       (libelcouch--create-document (map-elt document-json 'id) database))
      documents-json)))
 
+(cl-defmethod libelcouch--entity-create-children-from-json ((design-document libelcouch-design-document) json)
+  "Return the list of DESIGN-DOCUMENT's views as stored in JSON."
+  (let ((views-json (map-elt json 'views)))
+    (mapcar
+     (lambda (view-json)
+       (libelcouch--view-create :name (symbol-name (car view-json)) :parent design-document))
+     views-json)))
+
+(cl-defmethod libelcouch--entity-create-children-from-json ((view libelcouch-view) json)
+  "Return the list of VIEW's rows as stored in JSON."
+  (let ((views-json (map-elt json 'rows)))
+    (mapcar
+     (lambda (view-json)
+       (libelcouch--view-row-create
+        :name (map-elt view-json 'id)
+        :parent view
+        :key (map-elt view-json 'key)
+        :value (map-elt view-json 'value)))
+     views-json)))
+
+(defun libelcouch--create-document (name database)
+  "Create either a normal document or a design document.
+
+NAME is the name of the new document.  If it starts with
+\"_design\", a design document will be created.
+
+DATABASE is the parent of the new document."
+  (if (string-prefix-p "_design/" name)
+      (libelcouch--design-document-create :name name :parent database)
+    (libelcouch--document-create :name name :parent database)))
+
 (cl-defgeneric libelcouch--entity-children-url (entity)
-  "Return the path to query all children of ENTITY.")
+  "Return the path to query all children of ENTITY."
+  (libelcouch-entity-url entity))
 
 (cl-defmethod libelcouch--entity-children-url ((instance libelcouch-instance))
   "Return the URL of INSTANCE's databases."
@@ -239,43 +303,43 @@ Return nil if no authentication information is found for INSTANCE."
 (cl-defgeneric libelcouch-entity-list (entity function)
   "Evaluate FUNCTION with the children of ENTITY as parameter."
   (request
-   (url-encode-url (libelcouch--entity-children-url entity))
-   :timeout libelcouch-timeout
+    (url-encode-url (libelcouch--entity-children-url entity))
+    :timeout libelcouch-timeout
     :headers `(("Content-Type" . "application/json")
                ("Accept" . "application/json")
                ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance entity))))
-   :parser 'json-read
-   :success (cl-function
-             (lambda (&key data &allow-other-keys)
-               (let* ((children (libelcouch--entity-create-children-from-json entity data)))
-                 (funcall function children))))
-   :error #'libelcouch--request-error)
+    :parser 'json-read
+    :success (cl-function
+              (lambda (&key data &allow-other-keys)
+                (let* ((children (libelcouch--entity-create-children-from-json entity data)))
+                  (funcall function children))))
+    :error #'libelcouch--request-error)
   nil)
 
 (defun libelcouch-document-content (document function)
   "Evaluate FUNCTION with the content of DOCUMENT as parameter."
   (request
-   (url-encode-url (libelcouch-entity-url document))
-   :timeout libelcouch-timeout
-   :parser (lambda () (decode-coding-string (buffer-substring-no-properties (point) (point-max)) 'utf-8))
+    (url-encode-url (libelcouch-entity-url document))
+    :timeout libelcouch-timeout
+    :parser (lambda () (decode-coding-string (buffer-substring-no-properties (point) (point-max)) 'utf-8))
     :headers `(("Accept" . "application/json")
                ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance document))) )
-   :success (cl-function
-             (lambda (&key data &allow-other-keys)
-               (funcall function data)))
-   :error #'libelcouch--request-error)
+    :success (cl-function
+              (lambda (&key data &allow-other-keys)
+                (funcall function data)))
+    :error #'libelcouch--request-error)
   nil)
 
 (defun libelcouch-document-save (document content function)
   "Evaluate FUNCTION when CONTENT is saved as new value for DOCUMENT."
   (request
-   (url-encode-url (libelcouch-entity-url document))
-   :type "PUT"
+    (url-encode-url (libelcouch-entity-url document))
+    :type "PUT"
     :headers `(("Content-Type" . "application/json")
                ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance document))) )
-   :data (or content (encode-coding-string (buffer-substring-no-properties (point-min) (point-max)) 'utf-8))
-   :success (cl-function (lambda (&rest _args) (funcall function)))
-   :error #'libelcouch--request-error)
+    :data (or content (encode-coding-string (buffer-substring-no-properties (point-min) (point-max)) 'utf-8))
+    :success (cl-function (lambda (&rest _args) (funcall function)))
+    :error #'libelcouch--request-error)
   nil)
 
 (defun libelcouch-document-latest-revision (document function)
@@ -292,14 +356,14 @@ Return nil if no authentication information is found for INSTANCE."
   "Delete DOCUMENT and evaluate FUNCTION.
 If REVISION is not the latest, signal an error."
   (request
-   (url-encode-url (libelcouch-entity-url document))
-   :type "DELETE"
-   :params `(("rev" . ,revision))
+    (url-encode-url (libelcouch-entity-url document))
+    :type "DELETE"
+    :params `(("rev" . ,revision))
     :headers `(("Content-Type" . "application/json")
                ("Accept" . "application/json")
                ("Authorization" . ,(libelcouch--basic-auth-header (libelcouch-entity-instance document))))
-   :success (cl-function (lambda (&rest _args) (when function (funcall function))))
-   :error #'libelcouch--request-error)
+    :success (cl-function (lambda (&rest _args) (when function (funcall function))))
+    :error #'libelcouch--request-error)
   nil)
 
 (defun libelcouch-document-delete-latest (document &optional function)
@@ -312,4 +376,4 @@ If REVISION is not the latest, signal an error."
 (provide 'libelcouch)
 ;;; libelcouch.el ends here
 
-                                        ; LocalWords:  CouchDB
+;; LocalWords:  CouchDB
