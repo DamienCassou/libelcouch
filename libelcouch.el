@@ -307,4 +307,4 @@ If REVISION is not the latest, signal an error."
 (provide 'libelcouch)
 ;;; libelcouch.el ends here
 
-                                        ; LocalWords:  CouchDB
+;; LocalWords:  CouchDB
