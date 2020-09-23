@@ -146,6 +146,12 @@ considered to have failed."
   "Return the URL of INSTANCE."
   (libelcouch--instance-url instance))
 
+(cl-defmethod libelcouch-entity-url ((design-document libelcouch-design-document))
+  "Return the URL of DESIGN-DOCUMENT."
+  (format "%s/_design/%s"
+          (libelcouch-entity-url (libelcouch-entity-parent design-document))
+          (libelcouch-entity-name design-document)))
+
 (cl-defmethod libelcouch-entity-url ((view libelcouch-view))
   "Return the URL of VIEW."
   (format "%s/_view/%s"
@@ -244,9 +250,10 @@ NAME is the name of the new document.  If it starts with
 \"_design\", a design document will be created.
 
 DATABASE is the parent of the new document."
-  (if (string-prefix-p "_design/" name)
-      (libelcouch--design-document-create :name name :parent database)
-    (libelcouch--document-create :name name :parent database)))
+  (save-match-data
+    (if (string-match "^_design/\\(.*\\)$" name)
+        (libelcouch--design-document-create :name (match-string-no-properties 1 name) :parent database)
+      (libelcouch--document-create :name name :parent database))))
 
 (cl-defgeneric libelcouch--entity-children-url (entity)
   "Return the path to query all children of ENTITY."
