@@ -60,6 +60,13 @@
     (should (equal (libelcouch-entity-url database) "http://localhost:5984/Database"))
     (should (equal (libelcouch-entity-url document) "http://localhost:5984/Database/Document"))))
 
+(ert-deftest libelcouch-entity-weburl ()
+  (let* ((instance (libelcouch--instance-create :url "http://localhost:5984"))
+         (database (libelcouch--database-create :name "Database" :parent instance))
+         (document (libelcouch--document-create :name "Document" :parent database)))
+    (should (equal (libelcouch-entity-weburl database) "http://localhost:5984/_utils/#database/Database/_all_docs"))
+    (should (equal (libelcouch-entity-weburl document) "http://localhost:5984/_utils/#database/Database/Document"))))
+
 
 ;;; Private helpers
 
