@@ -3,6 +3,10 @@
 ;; Copyright (C) 2018-2023  Damien Cassou
 
 ;; Author: Damien Cassou <damien@cassou.me>
+;; Version: 0.11.0
+;; Package-Requires: ((emacs "26.1"))
+;; Created: 25 Sep 2022
+;; URL: https://www.gnu.org/software/emacs/
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -19,7 +23,7 @@
 
 ;;; Commentary:
 
-;;
+;; Tests for libelcouch.el.
 
 ;;; Code:
 (require 'ert)
@@ -29,7 +33,7 @@
 
 ;;; Accessors
 
-(ert-deftest libelcouch-entity-name ()
+(ert-deftest libelcouch-test-entity-name ()
   (let* ((instance (libelcouch--instance-create :name "Instance"))
          (database (libelcouch--database-create :name "Database" :parent instance))
          (document (libelcouch--document-create :name "Document" :parent database)))
@@ -37,14 +41,14 @@
     (should (equal (libelcouch-entity-name database) "Database"))
     (should (equal (libelcouch-entity-name document) "Document"))))
 
-(ert-deftest libelcouch-entity-parent ()
+(ert-deftest libelcouch-test-entity-parent ()
   (let* ((instance (libelcouch--instance-create :name "Instance"))
          (database (libelcouch--database-create :name "Database" :parent instance))
          (document (libelcouch--document-create :name "Document" :parent database)))
     (should (eq (libelcouch-entity-parent database) instance))
     (should (equal (libelcouch-entity-parent document) database))))
 
-(ert-deftest libelcouch-entity-instance ()
+(ert-deftest libelcouch-test-entity-instance ()
   (let* ((instance (libelcouch--instance-create :name "Instance"))
          (database (libelcouch--database-create :name "Database" :parent instance))
          (document (libelcouch--document-create :name "Document" :parent database)))
@@ -52,7 +56,7 @@
     (should (eq (libelcouch-entity-instance database) instance))
     (should (eq (libelcouch-entity-instance document) instance))))
 
-(ert-deftest libelcouch-entity-url ()
+(ert-deftest libelcouch-test-entity-url ()
   (let* ((instance (libelcouch--instance-create :url "http://localhost:5984"))
          (database (libelcouch--database-create :name "Database" :parent instance))
          (document (libelcouch--document-create :name "Document" :parent database)))
@@ -60,7 +64,7 @@
     (should (equal (libelcouch-entity-url database) "http://localhost:5984/Database"))
     (should (equal (libelcouch-entity-url document) "http://localhost:5984/Database/Document"))))
 
-(ert-deftest libelcouch-entity-weburl ()
+(ert-deftest libelcouch-test-entity-weburl ()
   (let* ((instance (libelcouch--instance-create :url "http://localhost:5984"))
          (database (libelcouch--database-create :name "Database" :parent instance))
          (document (libelcouch--document-create :name "Document" :parent database)))
@@ -70,7 +74,7 @@
 
 ;;; Private helpers
 
-(ert-deftest libelcouch--entity-create-children-from-json-instance ()
+(ert-deftest libelcouch-test--entity-create-children-from-json-instance ()
   (let* ((instance (libelcouch--instance-create :name "Instance"))
          (json (list "db1" "db2"))
          (children (libelcouch--entity-create-children-from-json instance json)))
@@ -80,7 +84,7 @@
               (libelcouch--database-create :name "db1" :parent instance)
               (libelcouch--database-create :name "db2" :parent instance))))))
 
-(ert-deftest libelcouch--entity-create-children-from-json-database ()
+(ert-deftest libelcouch-test--entity-create-children-from-json-database ()
   (let* ((instance (libelcouch--instance-create :name "Instance"))
          (database (libelcouch--database-create :name "Database" :parent instance))
          (json '((rows . (
@@ -93,7 +97,7 @@
               (libelcouch--document-create :name "doc1" :parent database)
               (libelcouch--document-create :name "doc2" :parent database))))))
 
-(ert-deftest libelcouch--entity-children-url ()
+(ert-deftest libelcouch-test--entity-children-url ()
   (let* ((instance (libelcouch--instance-create :name "Instance" :url "http://localhost:5984"))
          (database (libelcouch--database-create :name "Database" :parent instance)))
     (should (equal (libelcouch--entity-children-url instance) "http://localhost:5984/_all_dbs"))
