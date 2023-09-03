@@ -4,7 +4,7 @@
 
 ;; Author: Damien Cassou <damien@cassou.me>
 ;; Keywords: tools
-;; Url: https://gitlab.petton.fr/elcouch/libelcouch/
+;; Url: https://github.com/DamienCassou/libelcouch/
 ;; Package-requires: ((emacs "26.1") (request "0.3.0"))
 ;; Version: 0.11.0
 
