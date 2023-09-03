@@ -102,15 +102,15 @@ considered to have failed."
 
 ;;; Accessors
 
-(cl-defgeneric libelcouch-entity-name ((entity libelcouch-named-entity))
+(cl-defgeneric libelcouch-entity-name (entity)
   "Return the name of ENTITY."
   (libelcouch--named-entity-name entity))
 
-(cl-defgeneric libelcouch-entity-parent ((entity libelcouch-named-entity))
+(cl-defgeneric libelcouch-entity-parent (entity)
   "Return the entity containing ENTITY, nil if none."
   (libelcouch--named-entity-parent entity))
 
-(cl-defgeneric libelcouch-entity-full-name ((entity libelcouch-named-entity))
+(cl-defgeneric libelcouch-entity-full-name (entity)
   "Return the full name of ENTITY's parent followed by ENTITY name."
   (format "%s/%s"
           (libelcouch-entity-name (libelcouch-entity-parent entity))
