@@ -10,8 +10,8 @@
           <img alt="MELPA" src="https://melpa.org/packages/libelcouch-badge.svg"/>
         </a>
 
-        <a href="https://gitlab.com/DamienCassou/libelcouch/commits/master">
-          <img alt="pipeline status" src="https://gitlab.com/DamienCassou/libelcouch/badges/master/pipeline.svg" />
+        <a href="https://github.com/DamienCassou/elcouch/commits/master">
+          <img alt="pipeline status" src="https://github.com/DamienCassou/elcouch/badges/master/pipeline.svg" />
         </a>
       </p>
   #+END_HTML
@@ -20,7 +20,7 @@
 
 The package libelcouch is an Emacs library client to communicate with
 [[https://couchdb.apache.org/][CouchDB]], a database focusing on ease of use and having a scalable
-architecture. For a user interface, please check the [[https://gitlab.petton.fr/elcouch/elcouch][elcouch]] project
+architecture. For a user interface, please check the [[https://github.com/DamienCassou/elcouch][elcouch]] project
 instead (which depends on this one).
 
 ** Installing

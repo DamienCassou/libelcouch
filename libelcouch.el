@@ -4,7 +4,7 @@
 
 ;; Author: Damien Cassou <damien@cassou.me>
 ;; Keywords: tools
-;; Url: https://gitlab.petton.fr/elcouch/libelcouch/
+;; Url: https://github.com/DamienCassou/libelcouch/
 ;; Package-requires: ((emacs "26.1") (request "0.3.0"))
 ;; Version: 0.11.0
 
@@ -102,15 +102,15 @@ considered to have failed."
 
 ;;; Accessors
 
-(cl-defgeneric libelcouch-entity-name ((entity libelcouch-named-entity))
+(cl-defgeneric libelcouch-entity-name (entity)
   "Return the name of ENTITY."
   (libelcouch--named-entity-name entity))
 
-(cl-defgeneric libelcouch-entity-parent ((entity libelcouch-named-entity))
+(cl-defgeneric libelcouch-entity-parent (entity)
   "Return the entity containing ENTITY, nil if none."
   (libelcouch--named-entity-parent entity))
 
-(cl-defgeneric libelcouch-entity-full-name ((entity libelcouch-named-entity))
+(cl-defgeneric libelcouch-entity-full-name (entity)
   "Return the full name of ENTITY's parent followed by ENTITY name."
   (format "%s/%s"
           (libelcouch-entity-name (libelcouch-entity-parent entity))
