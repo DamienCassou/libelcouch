@@ -25,7 +25,7 @@ instead (which depends on this one).
 
 ** Installing
 
-Get libelcouch from [[https://melpa.org/#/libmpdel][melpa]] or [[https://stable.melpa.org/#/libmpdel][melpa stable]]. You can also clone the git
+Get libelcouch from [[https://melpa.org/#/libelcouch][melpa]] or [[https://stable.melpa.org/#/libelcouch][melpa stable]]. You can also clone the git
 repository.
 
 You need to have at least one CouchDB instance running.
@@ -40,4 +40,4 @@ See [[file:COPYING][COPYING]]. Copyright (c) 2018-2023 Damien Cassou.
   </a>
   #+END_HTML
 
-#  LocalWords:  MPD minibuffer
+#  LocalWords: minibuffer
